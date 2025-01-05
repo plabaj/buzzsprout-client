@@ -69,6 +69,92 @@ class BuzzsproutClient:
         response.raise_for_status()
         return response.json()
 
+    def update_episode(
+        self,
+        podcast_id: int,
+        episode_id: int,
+        title: Optional[str] = None,
+        audio_file: Optional[str] = None,
+        audio_url: Optional[str] = None,
+        artwork_file: Optional[str] = None,
+        artwork_url: Optional[str] = None,
+        description: Optional[str] = None,
+        summary: Optional[str] = None,
+        artist: Optional[str] = None,
+        tags: Optional[str] = None,
+        published_at: Optional[str] = None,
+        duration: Optional[int] = None,
+        guid: Optional[str] = None,
+        inactive_at: Optional[str] = None,
+        episode_number: Optional[int] = None,
+        season_number: Optional[int] = None,
+        explicit: Optional[bool] = None,
+        private: Optional[bool] = None,
+        email_user_after_audio_processed: Optional[bool] = None
+    ) -> Dict:
+        """Update an existing episode.
+        
+        Args:
+            podcast_id: ID of the podcast containing the episode
+            episode_id: ID of the episode to update
+            title: New episode title
+            audio_file: Path to new audio file to upload
+            audio_url: URL of new hosted audio file
+            artwork_file: Path to new artwork image file to upload
+            artwork_url: URL of new hosted artwork image
+            description: New episode description
+            summary: New episode summary
+            artist: New episode artist
+            tags: New comma-separated tags
+            published_at: New publish date in ISO 8601 format
+            duration: New episode duration in seconds
+            guid: New custom GUID
+            inactive_at: New date to make episode inactive
+            episode_number: New episode number
+            season_number: New season number
+            explicit: Whether episode contains explicit content
+            private: Whether episode is private
+            email_user_after_audio_processed: Whether to email user after processing
+            
+        Returns:
+            Dictionary containing updated episode details
+            
+        Raises:
+            requests.HTTPError: If API request fails
+        """
+        url = f"{self.base_url}/{podcast_id}/episodes/{episode_id}.json"
+        data = {
+            "title": title,
+            "description": description,
+            "summary": summary,
+            "artist": artist,
+            "tags": tags,
+            "published_at": published_at,
+            "duration": duration,
+            "guid": guid,
+            "inactive_at": inactive_at,
+            "episode_number": episode_number,
+            "season_number": season_number,
+            "explicit": explicit,
+            "private": private,
+            "email_user_after_audio_processed": email_user_after_audio_processed,
+            "audio_url": audio_url,
+            "artwork_url": artwork_url
+        }
+        
+        # Remove None values to avoid sending nulls
+        data = {k: v for k, v in data.items() if v is not None}
+        
+        files = {}
+        if audio_file:
+            files["audio_file"] = open(audio_file, "rb")
+        if artwork_file:
+            files["artwork_file"] = open(artwork_file, "rb")
+            
+        response = self.session.put(url, data=data, files=files or None)
+        response.raise_for_status()
+        return response.json()
+
     def create_episode(
         self,
         podcast_id: int,

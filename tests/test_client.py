@@ -273,6 +273,96 @@ def test_create_episode_with_files(mock_session, tmp_path):
         assert episode["title"] == "Too many or too few?"
         assert episode["episode_number"] == 4
 
+def test_update_episode(mock_session):
+    test_key = "test_api_key_789"
+    podcast_id = 12345
+    episode_id = 788881
+    mock_response = {
+        "id": 788881,
+        "title": "Updated Title",
+        "private": False,
+        "audio_url": "https://www.buzzsprout.com/updated.mp3",
+        "artwork_url": "https://www.buzzsprout.com/updated.jpg"
+    }
+    
+    # Setup mock session
+    mock_session.put.return_value.json.return_value = mock_response
+    mock_session.put.return_value.raise_for_status = Mock()
+    
+    with patch('buzzsprout_client.client.requests.Session', return_value=mock_session):
+        client = BuzzsproutClient(api_key=test_key)
+        
+        # Call the method
+        episode = client.update_episode(
+            podcast_id=podcast_id,
+            episode_id=episode_id,
+            title="Updated Title",
+            private=False,
+            audio_url="https://www.buzzsprout.com/updated.mp3",
+            artwork_url="https://www.buzzsprout.com/updated.jpg"
+        )
+        
+        # Verify the request was made correctly
+        expected_url = f"https://www.buzzsprout.com/api/{podcast_id}/episodes/{episode_id}.json"
+        mock_session.put.assert_called_once()
+        args, kwargs = mock_session.put.call_args
+        assert args[0] == expected_url
+        assert kwargs["data"]["title"] == "Updated Title"
+        assert kwargs["data"]["private"] is False
+        assert kwargs["data"]["audio_url"] == "https://www.buzzsprout.com/updated.mp3"
+        
+        # Verify the response
+        assert episode == mock_response
+        assert episode["title"] == "Updated Title"
+        assert episode["private"] is False
+
+def test_update_episode_with_files(mock_session, tmp_path):
+    test_key = "test_api_key_789"
+    podcast_id = 12345
+    episode_id = 788881
+    
+    # Create test files
+    audio_file = tmp_path / "new_audio.mp3"
+    audio_file.write_text("new audio")
+    artwork_file = tmp_path / "new_artwork.jpg"
+    artwork_file.write_text("new artwork")
+    
+    mock_response = {
+        "id": 788881,
+        "title": "Updated Title",
+        "private": False
+    }
+    
+    # Setup mock session
+    mock_session.put.return_value.json.return_value = mock_response
+    mock_session.put.return_value.raise_for_status = Mock()
+    
+    with patch('buzzsprout_client.client.requests.Session', return_value=mock_session):
+        client = BuzzsproutClient(api_key=test_key)
+        
+        # Call the method
+        episode = client.update_episode(
+            podcast_id=podcast_id,
+            episode_id=episode_id,
+            title="Updated Title",
+            private=False,
+            audio_file=str(audio_file),
+            artwork_file=str(artwork_file)
+        )
+        
+        # Verify the request was made correctly
+        expected_url = f"https://www.buzzsprout.com/api/{podcast_id}/episodes/{episode_id}.json"
+        mock_session.put.assert_called_once()
+        args, kwargs = mock_session.put.call_args
+        assert args[0] == expected_url
+        assert kwargs["files"]["audio_file"].read() == b"new audio"
+        assert kwargs["files"]["artwork_file"].read() == b"new artwork"
+        
+        # Verify the response
+        assert episode == mock_response
+        assert episode["title"] == "Updated Title"
+        assert episode["private"] is False
+
 def test_create_episode_missing_audio(mock_session):
     test_key = "test_api_key_789"
     podcast_id = 12345
