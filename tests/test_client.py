@@ -29,6 +29,36 @@ def test_base_url():
     client = BuzzsproutClient(api_key="test_key")
     assert client.base_url == "https://www.buzzsprout.com/api"
 
+def test_get_episodes(mock_session):
+    test_key = "test_api_key_789"
+    podcast_id = 12345
+    mock_response = [
+        {
+            "id": 788881,
+            "title": "Test Episode",
+            "audio_url": "https://example.com/episode.mp3"
+        }
+    ]
+    
+    # Setup mock session
+    mock_session.get.return_value.json.return_value = mock_response
+    mock_session.get.return_value.raise_for_status = Mock()
+    
+    with patch('buzzsprout_client.client.requests.Session', return_value=mock_session):
+        client = BuzzsproutClient(api_key=test_key)
+        
+        # Call the method
+        episodes = client.get_episodes(podcast_id)
+        
+        # Verify the request was made correctly
+        expected_url = f"https://www.buzzsprout.com/api/{podcast_id}/episodes.json"
+        mock_session.get.assert_called_once_with(expected_url)
+        
+        # Verify the response
+        assert episodes == mock_response
+        assert len(episodes) == 1
+        assert episodes[0]["title"] == "Test Episode"
+
 def test_authentication_in_requests(mock_session):
     test_key = "test_api_key_456"
     

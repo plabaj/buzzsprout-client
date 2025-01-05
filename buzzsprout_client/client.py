@@ -37,3 +37,17 @@ class BuzzsproutClient:
             return None
         response.raise_for_status()
         return response.json()
+
+    def get_episodes(self, podcast_id: int) -> List[Dict]:
+        """Get all episodes for a specific podcast.
+        
+        Args:
+            podcast_id: ID of the podcast to retrieve episodes for
+            
+        Returns:
+            List of episode dictionaries containing episode details
+        """
+        url = f"{self.base_url}/{podcast_id}/episodes.json"
+        response = self.session.get(url)
+        response.raise_for_status()
+        return response.json()
