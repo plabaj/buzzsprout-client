@@ -6,6 +6,6 @@ class BuzzsproutClient:
         self.base_url = "https://www.buzzsprout.com/api"
         self.session = requests.Session()
         self.session.headers.update({
-            "Authorization": f"Token {self.api_key}",
+            "Authorization": f"Token token={self.api_key}",
             "Accept": "application/json"
         })
