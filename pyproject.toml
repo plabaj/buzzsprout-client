@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "buzzsprout-client"
-version = "0.2.0"
+version = "0.2.1"
 description = "Python client for Buzzsprout API"
 authors = ["Peter Labaj <peter.labaj@gmail.com>"]
 license = "MIT"
