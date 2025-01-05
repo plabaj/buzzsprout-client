@@ -61,17 +61,35 @@ updated_episode = client.update_episode(
 To install development dependencies:
 
 ```bash
-pip install -e .[dev]
+poetry install
 ```
 
 To run tests:
 
 ```bash
-pytest
+poetry run pytest
 ```
 
 To run tests with coverage:
 
 ```bash
-pytest --cov=buzzsprout_client
+poetry run pytest --cov=buzzsprout_client
+```
+
+To activate the virtual environment:
+
+```bash
+poetry shell
+```
+
+To add new dependencies:
+
+```bash
+poetry add package_name
+```
+
+To add development dependencies:
+
+```bash
+poetry add --group dev package_name
 ```
