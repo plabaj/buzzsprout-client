@@ -59,6 +59,69 @@ def test_get_episodes(mock_session):
         assert len(episodes) == 1
         assert episodes[0]["title"] == "Test Episode"
 
+def test_get_episode(mock_session):
+    test_key = "test_api_key_789"
+    podcast_id = 12345
+    episode_id = 788881
+    mock_response = {
+        "id": 788881,
+        "title": "Too small or too big?",
+        "audio_url": "https://www.buzzsprout.com/140447/788881-filename.mp3",
+        "artwork_url": "https://storage.buzzsprout.com/variants/NABbMDx7JN5bSLzLPXyj67jA/8d66eb17bb7d02ca4856ab443a78f2148cafbb129f58a3c81282007c6fe24ff2",
+        "description": "",
+        "summary": "",
+        "artist": "Muffin Man",
+        "tags": "",
+        "published_at": "2019-09-12T03:00:00.000-04:00",
+        "duration": 12362,
+        "hq": True,
+        "guid": "Buzzsprout788881",
+        "inactive_at": None,
+        "episode_number": 5,
+        "season_number": 5,
+        "explicit": False,
+        "private": False,
+        "total_plays": 150
+    }
+    
+    # Setup mock session
+    mock_session.get.return_value.json.return_value = mock_response
+    mock_session.get.return_value.raise_for_status = Mock()
+    
+    with patch('buzzsprout_client.client.requests.Session', return_value=mock_session):
+        client = BuzzsproutClient(api_key=test_key)
+        
+        # Call the method
+        episode = client.get_episode(podcast_id, episode_id)
+        
+        # Verify the request was made correctly
+        expected_url = f"https://www.buzzsprout.com/api/{podcast_id}/episodes/{episode_id}.json"
+        mock_session.get.assert_called_once_with(expected_url)
+        
+        # Verify the response
+        assert episode == mock_response
+        assert episode["id"] == 788881
+        assert episode["title"] == "Too small or too big?"
+        assert episode["episode_number"] == 5
+        assert episode["season_number"] == 5
+
+def test_get_episode_not_found(mock_session):
+    test_key = "test_api_key_789"
+    podcast_id = 12345
+    episode_id = 999999
+    
+    # Setup mock session to return 404
+    mock_session.get.return_value.status_code = 404
+    
+    with patch('buzzsprout_client.client.requests.Session', return_value=mock_session):
+        client = BuzzsproutClient(api_key=test_key)
+        
+        # Call the method
+        episode = client.get_episode(podcast_id, episode_id)
+        
+        # Verify None is returned for non-existent episode
+        assert episode is None
+
 def test_authentication_in_requests(mock_session):
     test_key = "test_api_key_456"
     

@@ -51,3 +51,20 @@ class BuzzsproutClient:
         response = self.session.get(url)
         response.raise_for_status()
         return response.json()
+
+    def get_episode(self, podcast_id: int, episode_id: int) -> Optional[Dict]:
+        """Get details for a specific episode.
+        
+        Args:
+            podcast_id: ID of the podcast containing the episode
+            episode_id: ID of the episode to retrieve
+            
+        Returns:
+            Dictionary containing episode details or None if not found
+        """
+        url = f"{self.base_url}/{podcast_id}/episodes/{episode_id}.json"
+        response = self.session.get(url)
+        if response.status_code == 404:
+            return None
+        response.raise_for_status()
+        return response.json()
