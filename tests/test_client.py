@@ -144,3 +144,145 @@ def test_authentication_in_requests(mock_session):
         
         # Verify headers
         assert mock_session.headers.get('Authorization') == f"Token token={test_key}"
+
+def test_create_episode_with_urls(mock_session):
+    test_key = "test_api_key_789"
+    podcast_id = 12345
+    mock_response = {
+        "id": 788880,
+        "title": "Too many or too few?",
+        "audio_url": "https://www.google.com/my_audio_file.mp4",
+        "artwork_url": "https://www.google.com/my_artwork_file.jpeg",
+        "description": "",
+        "summary": "",
+        "artist": "Muffin Man",
+        "tags": "",
+        "published_at": "2019-09-12T03:00:00.000-04:00",
+        "duration": 23462,
+        "guid": "Buzzsprout788880",
+        "inactive_at": None,
+        "episode_number": 4,
+        "season_number": 5,
+        "explicit": True,
+        "private": True,
+        "total_plays": 0
+    }
+    
+    # Setup mock session
+    mock_session.post.return_value.json.return_value = mock_response
+    mock_session.post.return_value.raise_for_status = Mock()
+    
+    with patch('buzzsprout_client.client.requests.Session', return_value=mock_session):
+        client = BuzzsproutClient(api_key=test_key)
+        
+        # Call the method
+        episode = client.create_episode(
+            podcast_id=podcast_id,
+            title="Too many or too few?",
+            audio_url="https://www.google.com/my_audio_file.mp4",
+            artwork_url="https://www.google.com/my_artwork_file.jpeg",
+            artist="Muffin Man",
+            published_at="2019-09-12T03:00:00.000-04:00",
+            duration=23462,
+            guid="Buzzsprout788880",
+            episode_number=4,
+            season_number=5,
+            explicit=True,
+            private=True
+        )
+        
+        # Verify the request was made correctly
+        expected_url = f"https://www.buzzsprout.com/api/{podcast_id}/episodes.json"
+        mock_session.post.assert_called_once()
+        args, kwargs = mock_session.post.call_args
+        assert args[0] == expected_url
+        assert kwargs["data"]["title"] == "Too many or too few?"
+        assert kwargs["data"]["audio_url"] == "https://www.google.com/my_audio_file.mp4"
+        assert kwargs["data"]["artwork_url"] == "https://www.google.com/my_artwork_file.jpeg"
+        
+        # Verify the response
+        assert episode == mock_response
+        assert episode["id"] == 788880
+        assert episode["title"] == "Too many or too few?"
+        assert episode["episode_number"] == 4
+
+def test_create_episode_with_files(mock_session, tmp_path):
+    test_key = "test_api_key_789"
+    podcast_id = 12345
+    
+    # Create test files
+    audio_file = tmp_path / "audio.mp3"
+    audio_file.write_text("test audio")
+    artwork_file = tmp_path / "artwork.jpg"
+    artwork_file.write_text("test artwork")
+    
+    mock_response = {
+        "id": 788880,
+        "title": "Too many or too few?",
+        "audio_url": "https://www.buzzsprout.com/audio.mp3",
+        "artwork_url": "https://www.buzzsprout.com/artwork.jpg",
+        "description": "",
+        "summary": "",
+        "artist": "Muffin Man",
+        "tags": "",
+        "published_at": "2019-09-12T03:00:00.000-04:00",
+        "duration": 23462,
+        "guid": "Buzzsprout788880",
+        "inactive_at": None,
+        "episode_number": 4,
+        "season_number": 5,
+        "explicit": True,
+        "private": True,
+        "total_plays": 0
+    }
+    
+    # Setup mock session
+    mock_session.post.return_value.json.return_value = mock_response
+    mock_session.post.return_value.raise_for_status = Mock()
+    
+    with patch('buzzsprout_client.client.requests.Session', return_value=mock_session):
+        client = BuzzsproutClient(api_key=test_key)
+        
+        # Call the method
+        episode = client.create_episode(
+            podcast_id=podcast_id,
+            title="Too many or too few?",
+            audio_file=str(audio_file),
+            artwork_file=str(artwork_file),
+            artist="Muffin Man",
+            published_at="2019-09-12T03:00:00.000-04:00",
+            duration=23462,
+            guid="Buzzsprout788880",
+            episode_number=4,
+            season_number=5,
+            explicit=True,
+            private=True
+        )
+        
+        # Verify the request was made correctly
+        expected_url = f"https://www.buzzsprout.com/api/{podcast_id}/episodes.json"
+        mock_session.post.assert_called_once()
+        args, kwargs = mock_session.post.call_args
+        assert args[0] == expected_url
+        assert kwargs["files"]["audio_file"].read() == b"test audio"
+        assert kwargs["files"]["artwork_file"].read() == b"test artwork"
+        
+        # Verify the response
+        assert episode == mock_response
+        assert episode["id"] == 788880
+        assert episode["title"] == "Too many or too few?"
+        assert episode["episode_number"] == 4
+
+def test_create_episode_missing_audio(mock_session):
+    test_key = "test_api_key_789"
+    podcast_id = 12345
+    
+    with patch('buzzsprout_client.client.requests.Session', return_value=mock_session):
+        client = BuzzsproutClient(api_key=test_key)
+        
+        # Verify ValueError is raised when no audio is provided
+        with pytest.raises(ValueError):
+            client.create_episode(
+                podcast_id=podcast_id,
+                title="Too many or too few?"
+            )

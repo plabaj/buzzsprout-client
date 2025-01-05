@@ -68,3 +68,88 @@ class BuzzsproutClient:
             return None
         response.raise_for_status()
         return response.json()
+
+    def create_episode(
+        self,
+        podcast_id: int,
+        title: str,
+        audio_file: Optional[str] = None,
+        audio_url: Optional[str] = None,
+        artwork_file: Optional[str] = None,
+        artwork_url: Optional[str] = None,
+        description: str = "",
+        summary: str = "",
+        artist: str = "",
+        tags: str = "",
+        published_at: Optional[str] = None,
+        duration: Optional[int] = None,
+        guid: Optional[str] = None,
+        inactive_at: Optional[str] = None,
+        episode_number: Optional[int] = None,
+        season_number: Optional[int] = None,
+        explicit: bool = False,
+        private: bool = False,
+        email_user_after_audio_processed: bool = True
+    ) -> Dict:
+        """Create a new episode.
+        
+        Args:
+            podcast_id: ID of the podcast to add the episode to
+            title: Episode title (required)
+            audio_file: Path to audio file to upload
+            audio_url: URL of hosted audio file
+            artwork_file: Path to artwork image file to upload
+            artwork_url: URL of hosted artwork image
+            description: Episode description
+            summary: Episode summary
+            artist: Episode artist
+            tags: Comma-separated tags
+            published_at: Publish date in ISO 8601 format
+            duration: Episode duration in seconds
+            guid: Custom GUID
+            inactive_at: Date to make episode inactive
+            episode_number: Episode number
+            season_number: Season number
+            explicit: Whether episode contains explicit content
+            private: Whether episode is private
+            email_user_after_audio_processed: Whether to email user after processing
+            
+        Returns:
+            Dictionary containing created episode details
+            
+        Raises:
+            ValueError: If neither audio_file nor audio_url is provided
+            requests.HTTPError: If API request fails
+        """
+        if not audio_file and not audio_url:
+            raise ValueError("Either audio_file or audio_url must be provided")
+            
+        url = f"{self.base_url}/{podcast_id}/episodes.json"
+        data = {
+            "title": title,
+            "description": description,
+            "summary": summary,
+            "artist": artist,
+            "tags": tags,
+            "published_at": published_at,
+            "duration": duration,
+            "guid": guid,
+            "inactive_at": inactive_at,
+            "episode_number": episode_number,
+            "season_number": season_number,
+            "explicit": explicit,
+            "private": private,
+            "email_user_after_audio_processed": email_user_after_audio_processed,
+            "audio_url": audio_url,
+            "artwork_url": artwork_url
+        }
+        
+        files = {}
+        if audio_file:
+            files["audio_file"] = open(audio_file, "rb")
+        if artwork_file:
+            files["artwork_file"] = open(artwork_file, "rb")
+            
+        response = self.session.post(url, data=data, files=files or None)
+        response.raise_for_status()
+        return response.json()
